@@ -88,14 +88,16 @@ class StudentRegistrationSerializer(serializers.Serializer):
             return user
         
 class SubadminSerializer(serializers.Serializer):
-
-    username = serializers.CharField(max_length=150)
-    email = serializers. EmailField()
+    
+    id = serializers.IntegerField(source='user.id', read_only=True)
+ 
+    username     = serializers.CharField(max_length=150)
+    email        = serializers.EmailField()
     phone_number = serializers.CharField(max_length=15)
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
-             raise serializers.ValidationError("This username is already taken.")
+            raise serializers.ValidationError("This username is already taken.")
         return value
 
     def validate_email(self, value):
@@ -104,28 +106,36 @@ class SubadminSerializer(serializers.Serializer):
         return value
 
     def generate_random_password(self, length=10):
-        words = ["Eagle", "Lion", "Panther", "Shark", "Tiger", "wolf", "Hawk"]
-        special_chars = "1@#$%^&*"
-        word1 = random.choice(words)
-        word2 = random.choice(words)
-        number = str(random.randint(10, 99))
-        symbol = random.choice(special_chars)
-        return f"{word1}{symbol}{word2}{number}"
+        words = ["Eagle", "Lion", "Panther", "Shark", "Tiger", "Wolf", "Hawk"]
+        special_chars = "!@#$%^&*"
+        w1, w2 = random.sample(words, 2)
+        num    = str(random.randint(10, 99))
+        sym    = random.choice(special_chars)
+        return f"{w1}{sym}{w2}{num}"
 
     def create(self, validated_data):
-        username = validated_data["username"]
-        email = validated_data["email"]
-        phone_number = validated_data["phone_number"]
-        random_password = self.generate_random_password()
-        user = User.objects.create(username = username, email=email)
-        user.set_password(random_password)
+     
+        username    = validated_data.pop('username')
+        email       = validated_data.pop('email')
+        phone       = validated_data.pop('phone_number')
+        password    = self.generate_random_password()
+
+       
+        user = User.objects.create(username=username, email=email)
+        user.set_password(password)
         user.save()
 
-        subadmin = Subadmin.objects.create(user=user, phone_number=phone_number)
+        subadmin = Subadmin.objects.create(user=user, phone_number=phone)
 
         send_mail(
-            subject="Your subadmin accnt credentials",
-            message=f"Dear {username},\n\nYour accnt has been successfullycreated!\n\nUsername:{username}\nPassword: {random_password}\n\nPlease change your password after logging in.\n",
+            subject="Your Sub‑admin Account Credentials",
+            message=(
+                f"Hello {username},\n\n"
+                f"Your sub‑admin account has been created.\n"
+                f"Username: {username}\n"
+                f"Password: {password}\n\n"
+                "Please log in and change your password."
+            ),
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[email],
             fail_silently=False,
@@ -133,6 +143,16 @@ class SubadminSerializer(serializers.Serializer):
 
         return subadmin
 
+    def to_representation(self, instance):
+        # instance is a Subadmin object
+        return {
+            "id":           instance.user.id,
+            "username":     instance.user.username,
+            "email":        instance.user.email,
+            "phone_number": instance.phone_number,
+        }
+    
+ 
 
 
 class StudentApplicationSerializer(serializers.Serializer):

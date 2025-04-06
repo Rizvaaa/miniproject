@@ -28,14 +28,35 @@ class StudentRegistrationView(APIView):
             serializer.save()
             return Response({"message":"student registered successfully."},status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-class SubadminRegistrationview(APIView):
     def post(self, request):
+        """Register a new student"""
+        serializer = StudentRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Student registered successfully."},
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SubadminRegistrationView(APIView):
+    def get(self, request):
+        """List all sub‑admins"""
+        subs = Subadmin.objects.select_related('user').all()
+        serializer = SubadminSerializer(subs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        """Create a new sub‑admin"""
         serializer = SubadminSerializer(data=request.data)
         if serializer.is_valid():
-            subadmin = serializer.save()
-            return Response({"message": "subadmin registered successfully."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer.save()
+            return Response(
+                {"message": "Sub‑admin registered successfully."},
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 class CertificateUploadAPIView(APIView):
 
