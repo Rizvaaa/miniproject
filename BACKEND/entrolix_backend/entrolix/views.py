@@ -23,12 +23,6 @@ class LoginView(APIView):
     
 class StudentRegistrationView(APIView):
     def post(self, request):
-        serializer = StudentRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message":"student registered successfully."},status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    def post(self, request):
         """Register a new student"""
         serializer = StudentRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -61,7 +55,7 @@ class SubadminRegistrationView(APIView):
 class CertificateUploadAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
-        applications = StudentApplication.objects.all()
+        applications = StudentApplication.objects.filter(is_approved=False)
         serializer = StudentApplicationSerializer(applications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -79,7 +73,7 @@ class CertificateUploadAPIView(APIView):
 
         Notification.objects.create(
             user=application.student.user,
-            message=f"Your application (ID: {application.id}) has been approved!"
+            message=f"Your application has been approved! You are Successfully Enrolled as a Student in Calicut University Institute of Engineering and Technology"
         )
 
         serializer = StudentApplicationSerializer(application)
@@ -114,3 +108,46 @@ class NotificationAPIView(APIView):
         
        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class DashboardStatsView(APIView):
+    def get(self, request):
+        total_users = User.objects.count()
+        total_subadmins = Subadmin.objects.count()
+        total_applications = StudentApplication.objects.count()
+
+        # Only approved applications
+        approved_applications = StudentApplication.objects.filter(is_approved=True)
+        total_students = approved_applications.count()
+
+        # Department-wise counts (only approved applications)
+        cs_students = approved_applications.filter(course_name__iexact="computer sciences").count()
+        mech_students = approved_applications.filter(course_name__iexact="mechanical").count()
+        elec_students = approved_applications.filter(course_name__iexact="electrical").count()
+        ce_students = approved_applications.filter(course_name__iexact="computer and electronics").count()
+        print_students = approved_applications.filter(course_name__iexact="printing").count()
+        electronics_students = approved_applications.filter(course_name__iexact="electronics").count()
+
+        # Type-wise counts (MERIT vs NRI)
+        merit_students = approved_applications.filter(type__iexact='MERIT').count()
+        nri_students = approved_applications.filter(type__iexact='NRI').count()
+
+        return Response({
+            "total_users": total_users,
+            "total_students": total_students,
+            "total_subadmins": total_subadmins,
+            "total_applications": total_applications,
+            "department_counts": {
+                "CS": cs_students,
+                "ME": mech_students,
+                "EEE": elec_students,
+                "EP": ce_students,
+                "PT": print_students,
+                "EC": electronics_students
+            },
+            "type_counts": {
+                "merit": merit_students,
+                "nri": nri_students
+            }
+        }, status=status.HTTP_200_OK)

@@ -10,6 +10,7 @@ urlpatterns = [
     path('upload-certificates/',CertificateUploadAPIView.as_view(), name='certificate-upload'),
     path('upload-certificates/<int:application_id>/',CertificateUploadAPIView.as_view(), name='certificate-upload'),
     path('notifications/', NotificationAPIView.as_view(), name='notifications'),
+    path('dashboard/', DashboardStatsView.as_view(), name='dashboard'),
 ]
 
 

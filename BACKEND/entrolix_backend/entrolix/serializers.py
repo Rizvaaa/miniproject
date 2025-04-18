@@ -168,12 +168,13 @@ class StudentApplicationSerializer(serializers.Serializer):
     passport_size_photo = serializers.ImageField(required=False)
     income_certificate = serializers.ImageField(required=False)
     annual_income = serializers.IntegerField(default=0)
-    migration_certificate = serializers.ImageField(required=False)
     community_certificate = serializers.ImageField(required=False)
     nativity_certificate = serializers.ImageField(required=False)
     transfer_certificate = serializers.ImageField(required=False)
     conduct_certificate = serializers.ImageField(required=False)
     physical_certificate = serializers.ImageField(required=False)
+    type = serializers.CharField( default='MERIT')
+
     is_approved = serializers.BooleanField(default=False)
 
     def get_student_name(self, obj):
@@ -193,15 +194,14 @@ class StudentApplicationSerializer(serializers.Serializer):
         instance.income_certificate = validated_data.get('income_certificate', instance.income_certificate)
         instance.annual_income = validated_data.get('annual_income', instance.annual_income)
         instance.community_certificate = validated_data.get('community_certificate', instance.community_certificate)
-        instance.migration_certificate = validated_data.get('community_certificate', instance.community_certificate)
         instance.nativity_certificate = validated_data.get('nativity_certificate', instance.nativity_certificate)
         instance.transfer_certificate = validated_data.get('transfer_certificate', instance.transfer_certificate)
         instance.conduct_certificate = validated_data.get('conduct_certificate', instance.conduct_certificate)
         instance.physical_certificate = validated_data.get('physical_certificate', instance.physical_certificate)
+        instance.type = validated_data.get('type', instance.type)
         instance.is_approved = validated_data.get('is_approved', instance.is_approved)
         instance.save()
         return instance
-    
 
 
 class NotificationSerializer(serializers.Serializer):
