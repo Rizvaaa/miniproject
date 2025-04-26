@@ -24,9 +24,8 @@ class Subadmin(models.Model):
     def str(self):
         return self.user.username
     
-
 class StudentApplication(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE,null=True)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True)
     course_name = models.CharField(max_length=100, blank=True, null=True)
     admit_card = models.ImageField(upload_to='certificates/', blank=True, null=True)
     fee_reciept = models.ImageField(upload_to='certificates/', blank=True, null=True)
@@ -40,13 +39,13 @@ class StudentApplication(models.Model):
     transfer_certificate = models.ImageField(upload_to='certificates/', blank=True, null=True)
     conduct_certificate = models.ImageField(upload_to='certificates/', blank=True, null=True)
     physical_certificate = models.ImageField(upload_to='certificates/', blank=True, null=True)
-    type = models.CharField(max_length=10, default='MERIT')
-    # type = models.CharField(max_length=10, default='NRI')
+    type = models.CharField(max_length=10, default='Merit')
 
-    is_approved = models.BooleanField(default=False,null=True)
+    is_approved = models.BooleanField(default=False, null=True)
 
-    def _str_(self):
+    def __str__(self):
         return f"Application for {self.student.user.username}"
+
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  
@@ -54,5 +53,25 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False)  
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def _str_(self):
+    def __str__(self):
         return f"Notification for {self.user.username} - {self.message[:50]}"
+    
+
+class AdmissionSchedule(models.Model):
+    DEPARTMENT_CHOICES = [
+        ('CSE', 'Computer Science'),
+        ('MECH', 'Mechanical'),
+        ('PRINT', 'Printing Technology'),
+        ('EC', 'Electronics and Computer'),
+        ('EEE', 'Electrical and Electronics'),
+        ('ECE', 'Electronics'),
+    ]
+    
+    department = models.CharField(max_length=20, choices=DEPARTMENT_CHOICES, unique=True)
+    date_of_joining = models.DateField()
+    time_of_joining = models.TimeField()
+    created_by = models.ForeignKey(Subadmin, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.get_department_display()} - {self.date_of_joining} at {self.time_of_joining}"
+

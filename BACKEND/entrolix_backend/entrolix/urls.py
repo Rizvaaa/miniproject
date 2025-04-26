@@ -10,9 +10,10 @@ urlpatterns = [
     path('upload-certificates/',CertificateUploadAPIView.as_view(), name='certificate-upload'),
     path('upload-certificates/<int:application_id>/',CertificateUploadAPIView.as_view(), name='certificate-upload'),
     path('notifications/', NotificationAPIView.as_view(), name='notifications'),
+    path('notifications/<int:user_id>/', NotificationAPIView.as_view(), name='user-notification-list'),
     path('dashboard/', DashboardStatsView.as_view(), name='dashboard'),
+    path("email/",StudentemailAPIView.as_view(),name="email"),
+    path("admission-schedule/",AdmissionScheduleView.as_view()),
+    
 ]
 
-
-# if settings.DEBUG:
-#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

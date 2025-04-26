@@ -49,44 +49,49 @@ class UserLoginSerializer(serializers.Serializer):
                 "email":user.email,
                 "role":"student",
                 "message": "student login successful",
-                 "id":user.student.id,
+                 "id":user.id,
+                 "studentId":user.student.id,
+
             }
         
         raise serializers.ValidationError("Your account is not associated with any role.")
     
 class StudentRegistrationSerializer(serializers.Serializer):
-        first_name=serializers.CharField(max_length=150)
-        last_name=serializers.CharField(max_length=150)
-        email=serializers.EmailField()
-        password=serializers.CharField(write_only=True,min_length=8)
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("An account with this email already exists.")
+        return value
 
-        def validate_email(self, value):
-            if User.objects.filter(email=value).exists():
-                raise serializers.ValidationError("An account with this email already exist.")
-            return value
-        
-        def create(self, validated_data):
+    def create(self, validated_data):
+        first_name = validated_data.pop("first_name")
+        last_name = validated_data.pop("last_name")
+        email = validated_data.pop("email")
+        password = validated_data.pop("password")
 
-            first_name=validated_data.pop("first_name")
-            last_name=validated_data.pop("last_name")
-            email=validated_data.pop("email")
-            password=validated_data.pop("password")
+        user = User.objects.create(
+            username=email,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+        )
+        user.set_password(password)
+        user.save()
 
-            user= User.objects.create(
-                username=email,
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-            )
-            user.set_password(password)
-            user.save()
+        student = Student.objects.create(user=user)
 
-            Student.objects.create(
-                user=user
-            )
-            return user
-        
+        return {
+            "id": user.id,
+            "studentId": student.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+        }
+            
 class SubadminSerializer(serializers.Serializer):
     
     id = serializers.IntegerField(source='user.id', read_only=True)
@@ -178,7 +183,10 @@ class StudentApplicationSerializer(serializers.Serializer):
     is_approved = serializers.BooleanField(default=False)
 
     def get_student_name(self, obj):
-        return f"{obj.student.user.first_name} {obj.student.user.last_name}"
+        return f"{obj.student.user.first_name} {obj.student.user.last_name} "
+    
+    def get_student_email(self, obj):
+        return obj.student.user.email
 
     def create(self, validated_data):
         return StudentApplication.objects.create(**validated_data)
@@ -220,3 +228,20 @@ class NotificationSerializer(serializers.Serializer):
             'is_read': instance.is_read,
             'created_at': instance.created_at.isoformat(),  
         }
+    
+
+
+
+class AdmissionScheduleSerializer(serializers.ModelSerializer):
+    department_display = serializers.SerializerMethodField()
+    time_of_joining = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AdmissionSchedule
+        fields = ['id', 'department', 'department_display', 'date_of_joining', 'time_of_joining']
+
+    def get_department_display(self, obj):
+        return obj.get_department_display()
+
+    def get_time_of_joining(self, obj):
+        return obj.time_of_joining.strftime("%I:%M %p")  # Example: "12:30 AM"
