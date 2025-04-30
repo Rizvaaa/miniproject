@@ -7,7 +7,7 @@ from . models import *
 from .serializers import *
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate
-# from .serializers import TestSerializer
+
 
 
 class LoginView(APIView):
@@ -29,6 +29,14 @@ class StudentRegistrationView(APIView):
             return Response(user_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def delete(self, request, student_id, *args, **kwargs):
+        try:
+            student = Student.objects.get(id=student_id)
+            student.user.delete()  # This will also delete student because of on_delete=models.CASCADE
+            return Response({"message": "Student deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found."}, status=status.HTTP_404_NOT_FOUND)
+    
     
 class SubadminRegistrationView(APIView):
     def get(self, request):
@@ -47,7 +55,14 @@ class SubadminRegistrationView(APIView):
                 {"message": "Sub‑admin registered successfully."},
                 status=status.HTTP_201_CREATED
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+            user.delete()
+            return Response({"message": "Sub-admin deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist:
+            return Response({"error": "Sub-admin not found."}, status=status.HTTP_404_NOT_FOUND) 
     
 class StudentemailAPIView(APIView):
     def get(self, request, *args, **kwargs):
@@ -56,6 +71,7 @@ class StudentemailAPIView(APIView):
         data = [
             {
                 "name": f"{app.student.user.first_name} {app.student.user.last_name}",
+                "id":app.student.user.id,
                 "email": app.student.user.email,
                 "course_name": app.course_name
             }

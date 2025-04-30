@@ -6,7 +6,9 @@ from django.conf import settings
 urlpatterns = [
     path("login/",LoginView.as_view(),name="login"),
     path("studentregister/",StudentRegistrationView.as_view(),name="studentregister"),
+    path('studentregister/<int:student_id>/', StudentRegistrationView.as_view(), name='studentregister'),
     path("subadminregister/",SubadminRegistrationView.as_view(),name="subadminregister"),
+    path('subadminregister/<int:pk>/', SubadminRegistrationView.as_view(), name='subadmin-delete'),
     path('upload-certificates/',CertificateUploadAPIView.as_view(), name='certificate-upload'),
     path('upload-certificates/<int:application_id>/',CertificateUploadAPIView.as_view(), name='certificate-upload'),
     path('notifications/', NotificationAPIView.as_view(), name='notifications'),
