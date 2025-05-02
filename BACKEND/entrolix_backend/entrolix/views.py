@@ -31,12 +31,14 @@ class StudentRegistrationView(APIView):
     
     def delete(self, request, student_id, *args, **kwargs):
         try:
-            student = Student.objects.get(id=student_id)
-            student.user.delete()  # This will also delete student because of on_delete=models.CASCADE
+            student = Student.objects.get(user__id=student_id)  # Fix: filter via user ID
+            student.user.delete()  # This deletes both User and Student due to CASCADE
             return Response({"message": "Student deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except Student.DoesNotExist:
             return Response({"error": "Student not found."}, status=status.HTTP_404_NOT_FOUND)
-    
+        except Exception as e:
+          return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 class SubadminRegistrationView(APIView):
     def get(self, request):
