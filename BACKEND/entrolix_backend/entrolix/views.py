@@ -7,6 +7,7 @@ from . models import *
 from .serializers import *
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate
+  
 
 
 
@@ -65,6 +66,7 @@ class SubadminRegistrationView(APIView):
             return Response({"message": "Sub-admin deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except User.DoesNotExist:
             return Response({"error": "Sub-admin not found."}, status=status.HTTP_404_NOT_FOUND) 
+    
     
 class StudentemailAPIView(APIView):
     def get(self, request, *args, **kwargs):
@@ -218,3 +220,76 @@ class AdmissionScheduleView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "No schedule found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+# views.py
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth.models import User
+
+import random
+import string
+
+class ForgotPasswordView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        role = request.data.get('role')  # 'student' or 'subadmin'
+
+        if not email or not role:
+            return Response({'detail': 'Email and role are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'detail': 'User with this email does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Role verification
+        if role == 'student' and not hasattr(user, 'student'):
+            return Response({'detail': 'Email not associated with a student account.'}, status=status.HTTP_400_BAD_REQUEST)
+        if role == 'subadmin' and not hasattr(user, 'subadmin'):
+            return Response({'detail': 'Email not associated with a subadmin account.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate a new random password
+        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        user.set_password(new_password)
+        user.save()
+
+        # Send the new password via email
+        send_mail(
+            'Your Password has been Reset',
+            f'Hello, your new password is: {new_password}\nPlease login .',
+            'your_email@gmail.com',
+            [email],
+            fail_silently=False,
+        )
+
+        return Response({'detail': 'A new password has been sent to your email.'}, status=status.HTTP_200_OK)
+
+
+from django.utils.http import urlsafe_base64_decode
+
+class ResetPasswordConfirmView(APIView):
+    def post(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except:
+            return Response({'detail': 'Invalid link'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({'detail': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        new_password = request.data.get('new_password')
+        user.set_password(new_password)
+        user.save()
+        return Response({'detail': 'Password reset successful'})
+
+

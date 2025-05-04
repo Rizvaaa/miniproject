@@ -6,6 +6,8 @@ admin.site.register(Subadmin)
 # admin.site.register(Notification)
 admin.site.register(StudentApplication)
 admin.site.register(AdmissionSchedule)
+admin.site.register(ChatNotification)
+admin.site.register(Message)
 
 
 

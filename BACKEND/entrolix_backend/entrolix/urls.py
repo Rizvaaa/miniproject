@@ -16,6 +16,7 @@ urlpatterns = [
     path('dashboard/', DashboardStatsView.as_view(), name='dashboard'),
     path("email/",StudentemailAPIView.as_view(),name="email"),
     path("admission-schedule/",AdmissionScheduleView.as_view()),
-    
-]
 
+    # urls.py
+   path("forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
+]

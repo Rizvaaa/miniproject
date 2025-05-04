@@ -1,12 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# class Task(models.Model):
-#     title = models.CharField(max_length=255)
-#     completed = models.BooleanField(default=False)
 
-#     def __str__(self):
-#         return self.title
 
 class Student(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
@@ -75,3 +70,15 @@ class AdmissionSchedule(models.Model):
     def __str__(self):
         return f"{self.get_department_display()} - {self.date_of_joining} at {self.time_of_joining}"
 
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+class ChatNotification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
