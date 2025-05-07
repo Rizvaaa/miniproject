@@ -22,6 +22,7 @@ urlpatterns = [
     path("chat/messages/", ChatMessageView.as_view()),
     path("chat/messages/<int:message_id>/reply/", SubadminReplyView.as_view()),
 
+    path("student-eligibility/", StudentEligibilityAPIView.as_view(), name="student-eligibility"),
 
 
 

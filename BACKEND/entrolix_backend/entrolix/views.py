@@ -309,3 +309,31 @@ class SubadminReplyView(APIView):
         reply_text = request.data.get('reply_text')
         reply = SubadminReply.objects.create(message=message, reply_text=reply_text)
         return Response(SubadminReplySerializer(reply).data, status=201)
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+class StudentEligibilityAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        approved_applications = StudentApplication.objects.filter(is_approved=True, type__iexact='merit')
+        data = []
+
+        for app in approved_applications:
+            data.append({
+                'name': f"{app.student.user.first_name} {app.student.user.last_name}",
+                'income': app.annual_income,
+                'course': app.course_name,
+                'category': app.type,  # Should be 'Merit'
+                # 'egrantz': '✅ Yes',
+                # 'pms': '✅ Yes',
+                # 'mcm': '✅ Yes',
+                # 'css': '✅ Yes',
+            })
+
+        return Response(data, status=status.HTTP_200_OK)

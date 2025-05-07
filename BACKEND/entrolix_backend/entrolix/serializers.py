@@ -230,24 +230,31 @@ class NotificationSerializer(serializers.Serializer):
         }
     
 
-
 class AdmissionScheduleSerializer(serializers.ModelSerializer):
     department_display = serializers.SerializerMethodField()
     time_of_joining_display = serializers.SerializerMethodField()
+    date_of_joining_display = serializers.SerializerMethodField()
 
     class Meta:
         model = AdmissionSchedule
-        fields = ['id', 'department', 'department_display', 'date_of_joining', 'time_of_joining', 'time_of_joining_display']
+        fields = [
+            'id',
+            'department',
+            'department_display',
+            'date_of_joining',
+            'date_of_joining_display',
+            'time_of_joining',
+            'time_of_joining_display'
+        ]
 
     def get_department_display(self, obj):
         return obj.get_department_display()
 
     def get_time_of_joining_display(self, obj):
         return obj.time_of_joining.strftime("%I:%M %p") if obj.time_of_joining else None
-    
+
     def get_date_of_joining_display(self, obj):
         return obj.date_of_joining.strftime("%d %B %Y") if obj.date_of_joining else None
-
 
 
 class SubadminReplySerializer(serializers.ModelSerializer):
@@ -263,6 +270,17 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = ['id', 'student', 'student_name', 'text', 'created_at', 'replies']
+
+    def get_student_name(self, obj):
+        return f"{obj.student.user.first_name} {obj.student.user.last_name}"
+
+
+# serializers.py
+class StudentEligibilitySerializer(serializers.Serializer):
+    student_name = serializers.SerializerMethodField()
+    course_name = serializers.CharField()
+    type = serializers.CharField()
+    annual_income = serializers.IntegerField()
 
     def get_student_name(self, obj):
         return f"{obj.student.user.first_name} {obj.student.user.last_name}"
