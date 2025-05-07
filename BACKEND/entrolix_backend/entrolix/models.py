@@ -52,6 +52,8 @@ class Notification(models.Model):
         return f"Notification for {self.user.username} - {self.message[:50]}"
     
 
+# models.p
+
 class AdmissionSchedule(models.Model):
     DEPARTMENT_CHOICES = [
         ('CSE', 'Computer Science'),
@@ -72,13 +74,18 @@ class AdmissionSchedule(models.Model):
 
 
 
-class Message(models.Model):
-    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
-    receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
-    content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+# models.py
 
-class ChatNotification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    message = models.CharField(max_length=255)
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class ChatMessage(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+class SubadminReply(models.Model):
+    message = models.ForeignKey(ChatMessage, on_delete=models.CASCADE, related_name='replies')
+    reply_text = models.TextField()
+    replied_at = models.DateTimeField(auto_now_add=True)

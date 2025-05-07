@@ -200,43 +200,37 @@ class DashboardStatsView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import AdmissionSchedule
+from .serializers import AdmissionScheduleSerializer
+
 class AdmissionScheduleView(APIView):
     def get(self, request, *args, **kwargs):
         """
-        Get the admission schedule(s).
+        Get all admission schedules.
         """
         schedules = AdmissionSchedule.objects.all()
         serializer = AdmissionScheduleSerializer(schedules, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    def put(self, request, *args, **kwargs):
+
+    def put(self, request, id, *args, **kwargs):
         """
-        Edit the existing admission schedule (no ID needed).
+        Edit a specific admission schedule by ID.
         """
-        schedule = AdmissionSchedule.objects.first()  # Assuming there's only one schedule
-        if schedule:
-            serializer = AdmissionScheduleSerializer(schedule, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"message": "No schedule found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            schedule = AdmissionSchedule.objects.get(id=id)
+        except AdmissionSchedule.DoesNotExist:
+            return Response({"error": "Schedule not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        serializer = AdmissionScheduleSerializer(schedule, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
-# views.py
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.core.mail import send_mail
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth.models import User
-
-import random
-import string
 
 class ForgotPasswordView(APIView):
     def post(self, request):
@@ -293,3 +287,25 @@ class ResetPasswordConfirmView(APIView):
         return Response({'detail': 'Password reset successful'})
 
 
+
+
+
+class ChatMessageView(APIView):
+    def get(self, request):
+        messages = ChatMessage.objects.select_related('student__user').prefetch_related('replies').all()
+        serializer = ChatMessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        student_id = request.data.get('student_id')
+        text = request.data.get('text')
+        student = Student.objects.get(id=student_id)
+        msg = ChatMessage.objects.create(student=student, text=text)
+        return Response(ChatMessageSerializer(msg).data, status=201)
+
+class SubadminReplyView(APIView):
+    def post(self, request, message_id):
+        message = ChatMessage.objects.get(id=message_id)
+        reply_text = request.data.get('reply_text')
+        reply = SubadminReply.objects.create(message=message, reply_text=reply_text)
+        return Response(SubadminReplySerializer(reply).data, status=201)

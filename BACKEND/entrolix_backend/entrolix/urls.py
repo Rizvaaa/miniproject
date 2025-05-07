@@ -16,7 +16,13 @@ urlpatterns = [
     path('dashboard/', DashboardStatsView.as_view(), name='dashboard'),
     path("email/",StudentemailAPIView.as_view(),name="email"),
     path("admission-schedule/",AdmissionScheduleView.as_view()),
+    path("admission-schedule/<int:id>/", AdmissionScheduleView.as_view()),
+    path("forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
 
-    # urls.py
-   path("forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
+    path("chat/messages/", ChatMessageView.as_view()),
+    path("chat/messages/<int:message_id>/reply/", SubadminReplyView.as_view()),
+
+
+
+
 ]
