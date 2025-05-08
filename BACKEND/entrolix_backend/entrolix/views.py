@@ -135,6 +135,7 @@ class CertificateUploadAPIView(APIView):
         )
 
         return Response({"message": "Application deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    
 class NotificationAPIView(APIView):
     def get(self, request, *args, **kwargs):
         user_id = kwargs.get('user_id')
